@@ -60,7 +60,7 @@ for file in fileList:
             try:
                 j = [angle,strength,coherence] = hashTable(patch,Qangle,Qstrenth,Qcoherence)
             except:
-                print("X: "+iPixel+"\nY: "+jPixel+"\n")
+                print("X Y",iPixel,jPixel)
             patch = patch.reshape(1,-1)
             x = HRImage[iPixel,jPixel]
             Q[angle,strength,coherence] = Q[angle,strength,coherence] + patch.T*patch
