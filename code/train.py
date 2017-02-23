@@ -57,7 +57,10 @@ for file in fileList:
         jPixel = 6
         while jPixel<WMat-5:
             patch = LRImage[iPixel-6:iPixel+5,jPixel-6:jPixel+5]
-            j = [angle,strength,coherence] = hashTable(patch,Qangle,Qstrenth,Qcoherence)
+            try:
+                j = [angle,strength,coherence] = hashTable(patch,Qangle,Qstrenth,Qcoherence)
+            except:
+                print("X: "+iPixel+"\nY: "+jPixel+"\n")
             patch = patch.reshape(1,-1)
             x = HRImage[iPixel,jPixel]
             Q[angle,strength,coherence] = Q[angle,strength,coherence] + patch.T*patch
