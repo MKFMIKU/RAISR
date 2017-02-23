@@ -22,8 +22,8 @@ def hashTable(patch,Qangle,Qstrenth,Qcoherence):
     coherence = np.abs((lamda1-lamda2)/(lamda1+lamda2))
     
     #Quantization
-    angle = np.ceil(angle/(np.pi/Qangle)-1)
-    strength = np.ceil(strength/(1/Qstrenth)-1)
-    coherence = np.ceil(coherence/(1/Qcoherence)-1)
+    angle = np.floor(angle/(np.pi/Qangle)-1)
+    strength = np.floor(strength/(1/Qstrenth)-1)
+    coherence = np.floor(coherence/(1/Qcoherence)-1)
     
     return angle,strength,coherence
