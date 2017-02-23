@@ -2,34 +2,28 @@
 
 import numpy as np
 
-from sklearn import preprocessing
-
 def hashTable(patch,Qangle,Qstrenth,Qcoherence):
-   
-    # Composed G from the horizontal and vertical gradients,
-    # gx and gy, of the surroundings of the k-th pixel
     [gx,gy] = np.gradient(patch)
-    gx = preprocessing.normalize(gx).ravel()
-    gy = preprocessing.normalize(gy).ravel()
-    G = np.matrix((gx,gy))
-
-    # Use eigen-decomposition 
-    x = G*G.T
-    
-    # Compuetr the angle
+    G = np.matrix((gx.ravel(),gy.ravel())).T
+    x = G.T*G
     [eigenvalues,eigenvectors] = np.linalg.eig(x)
+    
+    #For angle
     angle = np.math.atan2(eigenvectors[0,1],eigenvectors[0,0])
     if angle<0:
         angle += np.pi
-    angle= np.ceil(angle/Qangle)
-          
-    # Computer the strength
-    strength = np.ceil(eigenvalues.max()/Qstrenth)
     
-    # Computer the coherence
+    #For strength
+    strength = eigenvalues.max()/(eigenvalues.sum())
+    
+    #For coherence
     lamda1 = np.math.sqrt(eigenvalues.max())
     lamda2 = np.math.sqrt(eigenvalues.min())
-    coherence = 0 if lamda1+lamda2==0 else np.abs((lamda1-lamda2)/(lamda1+lamda2))
-    coherence = np.ceil(coherence/Qcoherence)
+    coherence = np.abs((lamda1-lamda2)/(lamda1+lamda2))
+    
+    #Quantization
+    angle = np.ceil(angle/(np.pi/Qangle)-1)
+    strength = np.ceil(strength/(1/Qstrenth)-1)
+    coherence = np.ceil(coherence/(1/Qcoherence)-1)
     
     return angle,strength,coherence
