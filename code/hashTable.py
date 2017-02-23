@@ -14,7 +14,7 @@ def hashTable(patch,Qangle,Qstrenth,Qcoherence):
         angle += np.pi
     
     #For strength
-    strength = eigenvalues.max()
+    strength = eigenvalues.max()/eigenvalues.sum()
     
     #For coherence
     lamda1 = np.math.sqrt(eigenvalues.max())
