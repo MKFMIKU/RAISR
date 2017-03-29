@@ -1,135 +1,65 @@
-# -*- coding: utf-8 -*-
-
-import os  
+import os
 import numpy as np
 import cv2
+from scipy import sparse
 
 from hashTable import hashTable
 
-from sklearn import linear_model 
 
-# The const variable
-patchSize = 11
-R = 2
 Qangle = 24
-Qstrenth = 4
-Qcoherence = 4
+Qstrenth = 3
+Qcoherence = 3
 
-# Begin
+#构建空的矩阵Q，V用了存对应的LR和HR，h为过滤器 三个hashmap分别为Angle，Strength，Coherence，t
+Q = np.zeros((Qangle*Qstrenth*Qcoherence,4,11*11,11*11))
+V = np.zeros((Qangle*Qstrenth*Qcoherence,4,11*11,1))
+h = np.zeros((Qangle*Qstrenth*Qcoherence,4,11*11))
+
+
 dataDir="../train"
 fileList = []
 for parent,dirnames,filenames in os.walk(dataDir):
-    for filename in filenames:    
+    for filename in filenames:
         fileList.append(os.path.join(parent,filename))
 
-mat = cv2.imread(fileList[0],0)
-LRImage =cv2.resize(mat,(0,0),fx=0.5,fy=0.5)
-HRImage = mat
-
-HMat,WMat = mat.shape[:2]
-
-LRImage = cv2.resize(LRImage,(WMat,HMat),2,2,cv2.INTER_LINEAR)
-
-patch = LRImage[0:patchSize,0:patchSize]
-
-[angle,strength,coherence] = hashTable(patch,Qangle,Qstrenth,Qcoherence)
-
-# Init the Q and V        
-Q = np.zeros((Qangle,Qstrenth,Qcoherence,patchSize*patchSize,patchSize*patchSize))
-V = np.zeros((Qangle,Qstrenth,Qcoherence,patchSize*patchSize))
-
 for file in fileList:
-    mat = cv2.imread(fileList[0],0)
-    LRImage =cv2.resize(mat,(0,0),fx=0.5,fy=0.5)
-    HRImage = mat
-    HMat,WMat = mat.shape[:2] 
-    LRImage = cv2.resize(LRImage,(WMat,HMat),cv2.INTER_LINEAR)
-    
-    iPixel = 6
-    while iPixel<HMat-5:
-        jPixel = 6
-        while jPixel<WMat-5:
-            patch = LRImage[iPixel-6:iPixel+5,jPixel-6:jPixel+5]
-            [angle,strength,coherence] = hashTable(patch,Qangle,Qstrenth,Qcoherence)
-            patch = patch.reshape(1,-1)
-            x = HRImage[iPixel,jPixel]
-            Q[angle,strength,coherence] = Q[angle,strength,coherence] + patch.T*patch
-            V[angle,strength,coherence] = V[angle,strength,coherence] + patch*x
-            jPixel = jPixel+1
-        iPixel = iPixel+1    
-    
-H = np.zeros((Qangle,Qstrenth,Qcoherence,patchSize*patchSize))    
-# For each key j and pixel-type t        
-for i1 in range(Qangle):
-    for i2 in range(Qstrenth):
-        for i3 in range(Qcoherence):
-            reg = linear_model.LinearRegression()
-            reg.fit(Q[i1,i2,i3],V[i1,i2,i3])
-            H[i1,i2,i3] = reg.coef_
+    print("HashMap of %s"%file)
+    mat = cv2.imread(file)
+    #转换色彩空间，只对亮度进行训练
+    mat = cv2.cvtColor(mat, cv2.COLOR_BGR2YCrCb)[:,:,2]
+    #放缩为0-1
+    mat = cv2.normalize(mat.astype('float'), None, 0.0, 1.0, cv2.NORM_MINMAX)
+    HR = mat
 
-print("Train is off\n")        
-np.save("HashTable",H)
+    #模糊LR
+    #Upscaling
+    LR = cv2.GaussianBlur(LR,(0,0),2);
 
-testMat = cv2.imread(fileList[1],0)
-cv2.imwrite("Origin.bmp",testMat)
-LRImage =cv2.resize(testMat,(0,0),fx=0.5,fy=0.5)
-cv2.imwrite("LRImage.bmp",LRImage)
+    # Set the train map
 
-LRImage = cv2.resize(LRImage,(WMat,HMat),cv2.INTER_LINEAR)
-
-while iPixel<HMat-5:
-    jPixel = 6
-    while jPixel<WMat-5:
-        patch = LRImage[iPixel-6:iPixel+5,jPixel-6:jPixel+5]
-        [angle,strength,coherence] = hashTable(patch,Qangle,Qstrenth,Qcoherence)
-        f = H[angle,strength,coherence]
-        patch = patch.reshape(1,-1)
-        LRImage[jPixel,iPixel] = patch*np.matrix(f).T
-        jPixel = jPixel+1
-    iPixel = iPixel+1    
-cv2.imwrite("LRImage_RAISR.bmp",LRImage)
-
-'''
-for file in fileList:
-    mat = cv2.imread(file,0)
-    
-    # Use upsampling to get the LRimage
-    # which the HRImage is the origin
-    LRImage = cv2.GaussianBlur(mat,(5,5),0)
-    HRImage = mat
-    HMat,WMat = mat.shape[:2]    
-
-    # Upscale the LRImage
-    LRImage = cv2.resize(LRImage,(WMat,HMat),cv2.INTER_LINEAR)
-
-    # for each pixel k in yi do
-    iPixel = 6
-    while iPixel<HMat-5:
-        jPixel = 6
-        while jPixel<WMat-5:
-            patch = LRImage[iPixel-6:iPixel+5,jPixel-6:jPixel+5]
-            try:
-                j = [angle,strength,coherence] = hashTable(patch,Qangle,Qstrenth,Qcoherence)
-            except:
-                print("X Y",iPixel,jPixel)
-            patch = patch.reshape(1,-1)
-            x = HRImage[iPixel,jPixel]
-            Q[angle,strength,coherence] = Q[angle,strength,coherence] + patch.T*patch
-            V[angle,strength,coherence] = V[angle,strength,coherence] + patch*x
-            
-            jPixel = jPixel+1
-        iPixel = iPixel+1
+    #遍历每个像素
+    for xP in range(5,LR.shape[0]-6):
+        for yP in range(5,LR.shape[1]-6):
+        	#取patch
+            patch = LR[xP-5:xP+6,yP-5:yP+6]
+            #计算特征
+            [angle,strenth,coherence] = hashTable(patch,Qangle,Qstrenth,Qcoherence)
+            #压缩向量空间
+            j = angle*9+strenth*3+coherence
+            A = patch.reshape(1,-1)
+            x = HR[xP][yP]
+            #计算像素类型
+            t = xP%2*2+yP%2
+            #存入对应的HashMap
+            Q[j,t] += A*A.T
+            V[j,t] += A.T*x
 
 
-H = np.zeros((Qangle,Qstrenth,Qcoherence,patchSize*patchSize))    
-# For each key j and pixel-type t        
-for t in range(R*R):
+# Set the train step
+for t in range(4):
     for j in range(Qangle*Qstrenth*Qcoherence):
-        reg = linear_model.LinearRegression()
-        reg.fit(Q[j,t],V[j,t])
-        H[j,t] = reg.coef_
+    	#针对每种像素类型和图像特征训练4*24*3*3个过滤器
+        h[j,t] = sparse.linalg.cg(Q[j,t],V[j,t])[0]
 
-np.save("HashTable",H)
-
-print("Train is off\n")
-'''
+print("Train is off")
+np.save("./Filters",h)
