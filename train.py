@@ -3,14 +3,13 @@ import numpy as np
 import cv2
 from scipy import sparse
 
-from hashTable import hashTable
+from model.hashTable import hashTable
 
 
 Qangle = 24
 Qstrenth = 3
 Qcoherence = 3
 
-#构建空的矩阵Q，V用了存对应的LR和HR，h为过滤器 三个hashmap分别为Angle，Strength，Coherence，t
 Q = np.zeros((Qangle*Qstrenth*Qcoherence,4,11*11,11*11))
 V = np.zeros((Qangle*Qstrenth*Qcoherence,4,11*11,1))
 h = np.zeros((Qangle*Qstrenth*Qcoherence,4,11*11))
