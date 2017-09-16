@@ -1,21 +1,29 @@
-import os
+import argparse, os
 import numpy as np
 import cv2
 from scipy import sparse
-
 from model.hashTable import hashTable
 
+parser = argparse.ArgumentParser(description="RAISR")
+parser.add_argument("--Qangle", type=int, default=24, help="Training Qangle size")
+parser.add_argument("--Qstrenth", type=int, default=3, help="Training Qstrenth size")
+parser.add_argument("--Qcoherence", type=int, default=3, help="Training Qcoherence size")
+parser.add_argument('--dataset', default='dataset/291', type=str, help='path save the train dataset')
 
-Qangle = 24
-Qstrenth = 3
-Qcoherence = 3
+opt = parser.parse_args()
+print(opt)
+
+# Implement of Algorithm 1: Computing the hash-table keys.
+Qangle = opt.Qangle
+Qstrenth = opt.Qstrenth
+Qcoherence = opt.Qcoherence
 
 Q = np.zeros((Qangle*Qstrenth*Qcoherence,4,11*11,11*11))
 V = np.zeros((Qangle*Qstrenth*Qcoherence,4,11*11,1))
 h = np.zeros((Qangle*Qstrenth*Qcoherence,4,11*11))
 
 
-dataDir="../train"
+dataDir = opt.dataset
 fileList = []
 for parent,dirnames,filenames in os.walk(dataDir):
     for filename in filenames:
