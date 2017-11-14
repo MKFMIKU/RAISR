@@ -44,7 +44,7 @@ def main():
 
     Q = np.zeros((Qangle * Qstrenth * Qcoherence, 4, patch * patch, patch * patch))
     V = np.zeros((Qangle * Qstrenth * Qcoherence, 4, patch * patch, 1))
-    h = np.zeros((Qangle * Qstrenth * Qcoherence, 4, patch * patch))
+    res_h = np.zeros((Qangle * Qstrenth * Qcoherence, 4, patch * patch))
 
     for image_path in tqdm(images_path):
         print("HashMap of %s" % image_path)
@@ -71,9 +71,9 @@ def main():
     # Todo: Change to more quick learning style
     for t in range(4):
         for j in range(Qangle * Qstrenth * Qcoherence):
-            h[j, t] = sparse.linalg.cg(Q[j, t], V[j, t])[0]
+            res_h[j, t] = sparse.linalg.cg(Q[j, t], V[j, t])[0]
 
-    np.save("./Filters", h)
+    np.save("./Filters", res_h)
 
 
 if __name__ == '__main__':
