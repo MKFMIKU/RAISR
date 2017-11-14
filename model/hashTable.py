@@ -23,7 +23,7 @@ def hashTable(patch,Qangle,Qstrenth,Qcoherence):
     
     #Quantization
     angle = np.floor(angle/(np.pi/Qangle)-1)
-    strength = np.floor(strength/(1/Qstrenth)-1)
-    coherence = np.floor(coherence/(1/Qcoherence)-1)
+    strength = np.floor(strength/(1.0/Qstrenth)-1)
+    coherence = np.floor(coherence/(1.0/Qcoherence)-1)
     
     return int(angle),int(strength),int(coherence)
