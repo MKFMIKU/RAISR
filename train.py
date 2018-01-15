@@ -54,10 +54,13 @@ def main():
 
         label = im_y
         data = misc.imresize(label, (h // scale, w // scale), interp='bicubic')
-
+        # revised patch
+        start_point = patch // 2
+        end_point = patch - start_point
+        
         # Todo: Add more elegant to crop path
-        for xP in range(patch, data.shape[0], patch):
-            for yP in range(patch, data.shape[1], patch):
+        for xP in range(start_point, LR.shape[0] - end_point, patch):
+            for yP in range(start_point, LR.shape[1] - end_point, patch):
                 im_patch = data[xP:xP + patch, yP:yP + patch]
                 [angle, strenth, coherence] = hashTable(im_patch, Qangle, Qstrenth, Qcoherence)
                 j = angle * 9 + strenth * 3 + coherence
