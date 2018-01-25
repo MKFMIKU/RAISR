@@ -10,3 +10,5 @@ else
 fi
 
 unzip datasets.zip -d datasets
+
+cd datasets && mv T91/* BSDS200 && mv BSDS200 291 && rm -rf T91
